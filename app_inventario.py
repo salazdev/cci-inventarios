@@ -2,78 +2,69 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN
-st.set_page_config(page_title="CCI - Dashboard", layout="wide")
-st.title("📈 Dashboard Estratégico - CCI RODAMIENTOS")
+# Configuración básica
+st.set_page_config(page_title="CCI - Inventarios", layout="wide")
+st.title("📈 Dashboard CCI RODAMIENTOS")
 
-# Mantenemos el link de 2025 solo como base por defecto
-URL_DEFAULT = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx"
-
-@st.cache_data(ttl=300)
-def procesar_excel(fuente):
+# FUNCION DE PROCESAMIENTO
+def procesar_datos(archivo):
     try:
-        # Leemos el archivo (sea el de GitHub o el que subas tú)
-        df = pd.read_excel(fuente)
+        df = pd.read_excel(archivo)
         df.columns = df.columns.str.strip()
         
-        # Identificar columnas numéricas dinámicamente
-        for col in ["Cantidad", "Venta total", "Costo total local"]:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+        # Ajuste de columnas numéricas
+        cols_negocio = ["Cantidad", "Venta total", "Costo total local"]
+        for c in cols_negocio:
+            if c in df.columns:
+                df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
         
-        # Configurar fechas
-        col_fecha = "Fecha documento"
-        if col_fecha in df.columns:
-            df[col_fecha] = pd.to_datetime(df[col_fecha], errors='coerce')
-            df['Mes'] = df[col_fecha].dt.to_period('M').astype(str)
+        # Ajuste de Fechas
+        if "Fecha documento" in df.columns:
+            df["Fecha documento"] = pd.to_datetime(df["Fecha documento"], errors='coerce')
+            df['Mes'] = df["Fecha documento"].dt.to_period('M').astype(str)
         
         df['Margen'] = df["Venta total"] - df["Costo total local"]
         return df
     except Exception as e:
-        st.error(f"Error al leer el archivo: {e}")
+        st.error(f"Error técnico: {e}")
         return None
 
-# --- LÓGICA DE CARGA (Aquí corregimos tu duda) ---
-st.sidebar.header("📂 Fuente de Datos")
-
-# Primero el botón de subida. Si hay algo aquí, mandará sobre GitHub.
-archivo_usuario = st.sidebar.file_uploader("Subir archivo (2024, 2025, etc):", type=["xlsx"])
+# INTERFAZ DE CARGA (Aquí está el cambio clave)
+st.markdown("### 📥 Paso 1: Cargue su archivo Excel (2024, 2025 o cualquier año)")
+archivo_usuario = st.file_uploader("Seleccione el archivo desde su dispositivo:", type=["xlsx"])
 
 if archivo_usuario is not None:
-    # SI SUBES UN ARCHIVO, USAMOS ESE Y OLVIDAMOS GITHUB
-    df = procesar_excel(archivo_usuario)
-    st.sidebar.success(f"✅ Cargado: {archivo_usuario.name}")
+    # Solo procesamos si el usuario sube algo
+    df = procesar_datos(archivo_usuario)
+    
+    if df is not None:
+        st.success(f"✅ Archivo '{archivo_usuario.name}' cargado con éxito")
+        
+        # --- DASHBOARD ---
+        elementos = ["Todos"] + sorted(df["Elemento"].dropna().unique().tolist())
+        sel = st.selectbox("🔍 Buscar Producto:", elementos)
+        df_f = df if sel == "Todos" else df[df["Elemento"] == sel]
+
+        # KPIs
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Registros", f"{len(df_f):,}")
+        c2.metric("Cant. Total", f"{int(df_f['Cantidad'].sum()):,}")
+        c3.metric("Venta Total", f"${df_f['Venta total'].sum():,.0f}")
+        v = df_f['Venta total'].sum()
+        m = df_f['Margen'].sum()
+        c4.metric("Margen %", f"{(m/v*100 if v!=0 else 0):.1f}%")
+
+        st.divider()
+        # Gráficos
+        col1, col2 = st.columns(2)
+        with col1:
+            res_m = df_f.groupby('Mes')['Cantidad'].sum().reset_index()
+            st.plotly_chart(px.line(res_m, x='Mes', y='Cantidad', title="Volumen Mensual"), use_container_width=True)
+        with col2:
+            top = df.groupby('Elemento')['Venta total'].sum().sort_values(ascending=False).head(10).reset_index()
+            st.plotly_chart(px.bar(top, x='Venta total', y='Elemento', orientation='h', title="Top 10 Ventas"), use_container_width=True)
+
+        st.dataframe(df_f, use_container_width=True)
 else:
-    # SI NO HAS SUBIDO NADA, CARGAMOS EL 2025 DE GITHUB POR DEFECTO
-    df = procesar_excel(URL_DEFAULT)
-    st.sidebar.info("ℹ️ Mostrando Movimientos 2025 (GitHub)")
-
-# --- DASHBOARD ---
-if df is not None:
-    # Filtro dinámico (funciona para cualquier año)
-    elementos = ["Todos"] + sorted(df["Elemento"].dropna().unique().tolist())
-    seleccion = st.selectbox("🔍 Seleccionar Producto:", elementos)
-    df_filtro = df if seleccion == "Todos" else df[df["Elemento"] == seleccion]
-
-    # Métricas e indicadores
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Registros", f"{len(df_filtro):,}")
-    c2.metric("Cant. Total", f"{int(df_filtro['Cantidad'].sum()):,}")
-    c3.metric("Venta Total", f"${df_filtro['Venta total'].sum():,.0f}")
-    v = df_filtro['Venta total'].sum()
-    m = df_filtro['Margen'].sum()
-    c4.metric("Margen", f"${m:,.0f}", f"{(m/v*100 if v!=0 else 0):.1f}%")
-
-    st.divider()
-    col1, col2 = st.columns(2)
-    with col1:
-        if 'Mes' in df_filtro.columns:
-            resumen = df_filtro.groupby('Mes')['Cantidad'].sum().reset_index()
-            st.plotly_chart(px.line(resumen, x='Mes', y='Cantidad', title="Evolución Mensual"), use_container_width=True)
-    with col2:
-        top_v = df.groupby('Elemento')['Venta total'].sum().sort_values(ascending=False).head(10).reset_index()
-        st.plotly_chart(px.bar(top_v, x='Venta total', y='Elemento', orientation='h', title="Top 10 Ventas"), use_container_width=True)
-
-    st.dataframe(df_filtro, use_container_width=True)
-else:
-    st.warning("Esperando datos válidos...")
+    st.info("👋 ¡Hola! Por favor sube un archivo de movimientos para ver el análisis.")
+    st.stop()
