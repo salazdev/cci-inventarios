@@ -6,70 +6,91 @@ import plotly.express as px
 st.set_page_config(page_title="CCI - Análisis Completo", layout="wide")
 st.title("📊 Análisis de Inventario y Ventas - CCI")
 
-# 2. ENLACE AL NUEVO ARCHIVO (Reemplaza con tu link Raw de GitHub)
+# 2. ENLACE AL ARCHIVO (Asegúrate de que el nombre en GitHub coincida)
 URL_ANALISIS = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx"
 
 @st.cache_data(ttl=300)
-def cargar_analisis(url):
+def cargar_datos(url):
     try:
         df = pd.read_excel(url)
+        # Limpiamos espacios en los nombres de las columnas por seguridad
         df.columns = df.columns.str.strip()
         
-        # Convertir a números las columnas clave
-        cols_num = ["Venta_Total", "Cantidad_Vendida", "%_Margen", "Dias_Sin_Venta, Estado"]
-        for c in cols_num:
-            if c in df.columns:
-                df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
+        # Convertimos columnas clave a números (por si hay errores en el Excel)
+        cols_numericas = ["Cantidad_Vendida", "Venta_Total", "Costo_Total", "Margen", "%_Margen", "Dias_Sin_Venta"]
+        for col in cols_numericas:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         return df
-    except:
+    except Exception as e:
+        st.error(f"Error al cargar el archivo: {e}")
         return None
 
-df = cargar_analisis(URL_ANALISIS)
+# Ejecutar carga
+df = cargar_datos(URL_ANALISIS)
 
 if df is not None:
-    # --- FILTROS ---
-    st.sidebar.header("Filtros de Análisis")
-    # Filtro por Estado (Nuevo)
+    # --- BARRA LATERAL (FILTROS) ---
+    st.sidebar.header("⚙️ Filtros")
+    
+    # Filtro dinámico por Estado
     if "Estado" in df.columns:
-        estados = ["Todos"] + list(df["Estado"].unique())
-        sel_estado = st.sidebar.selectbox("Filtrar por Estado:", estados)
-        if sel_estado != "Todos":
-            df = df[df["Estado"] == sel_estado]
+        lista_estados = ["Todos"] + sorted(df["Estado"].dropna().unique().tolist())
+        estado_sel = st.sidebar.selectbox("Filtrar por Estado:", lista_estados)
+        if estado_sel != "Todos":
+            df = df[df["Estado"] == estado_sel]
 
-    # --- MÉTRICAS PRINCIPALES ---
+    # --- MÉTRICAS PRINCIPALES (KPIs) ---
     c1, c2, c3, c4 = st.columns(4)
+    
+    # Usamos los nombres exactos de tus columnas con guion bajo
     with c1:
-        st.metric("Productos Analizados", len(df))
+        st.metric("Total Elementos", f"{len(df):,}")
     with c2:
-        st.metric("Venta_Total Sum.", f"${df['Venta_Total'].sum():,.0f}")
+        total_venta = df["Venta_Total"].sum()
+        st.metric("Venta Total", f"${total_venta:,.0f}")
     with c3:
-        st.metric("Promedio Margen", f"{df['%_Margen'].mean():.1f}%")
+        margen_prom = df["%_Margen"].mean()
+        st.metric("Margen Promedio", f"{margen_prom:.1f}%")
     with c4:
-        st.metric("Máx. Días Sin Venta", f"{df['Dias_Sin_Venta'].max()} días")
+        max_dias = df["Dias_Sin_Venta"].max()
+        st.metric("Máx. Días Sin Venta", f"{int(max_dias)} días")
 
     st.divider()
 
-    # --- GRÁFICOS ESTRATÉGICOS ---
+    # --- GRÁFICOS ---
     col_izq, col_der = st.columns(2)
 
     with col_izq:
+        st.subheader("📦 Distribución por Estado")
         if "Estado" in df.columns:
-            st.subheader("Distribución por Estado")
-            fig_pie = px.pie(df, names="Estado", values="Venta Total", hole=0.4)
+            # Gráfico de torta para ver cuántos productos hay en cada estado
+            fig_pie = px.pie(df, names="Estado", values="Venta_Total", 
+                             hole=0.4, color_discrete_sequence=px.colors.qualitative.Safe)
             st.plotly_chart(fig_pie, use_container_width=True)
 
     with col_der:
-        st.subheader("Dias_Sin_Venta por Producto (Top 10)")
-        top_dias = df.sort_values("Dias_Sin_Venta", ascending=False).head(10)
-        fig_bar = px.bar(top_dias, x="Días Sin Venta", y="Producto", orientation='h', color="Dias_Sin_Venta")
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.subheader("📉 Top 10 Productos con más Días Sin Venta")
+        if "Dias_Sin_Venta" in df.columns and "Elemento" in df.columns:
+            top_quedados = df.sort_values("Dias_Sin_Venta", ascending=False).head(10)
+            fig_bar = px.bar(top_quedados, x="Dias_Sin_Venta", y="Elemento", 
+                             orientation='h', color="Dias_Sin_Venta",
+                             color_continuous_scale="Reds")
+            st.plotly_chart(fig_bar, use_container_width=True)
 
-    # --- TABLA DETALLADA ---
-    st.subheader("📋 Detalle de Análisis Completo")
-    st.dataframe(df, use_container_width=True)
+    # --- TABLA DE DATOS ---
+    st.subheader("📋 Detalle General de Análisis")
+    # Buscador rápido por nombre de elemento
+    busqueda = st.text_input("🔍 Buscar elemento específico:")
+    if busqueda:
+        df_mostrar = df[df["Elemento"].astype(str).str.contains(busqueda, case=False)]
+    else:
+        df_mostrar = df
+
+    st.dataframe(df_mostrar, use_container_width=True)
 
 else:
-
-    st.error("No se pudo cargar el archivo 'Analisis_Completo.xlsx'. Verifica el link en GitHub.")
+    st.warning("Esperando conexión con el archivo Excel en GitHub...")
+    st.info("Asegúrate de que el archivo en GitHub se llame exactamente 'Analisis_Completo.xlsx'")
 
 
