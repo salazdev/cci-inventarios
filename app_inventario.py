@@ -6,10 +6,10 @@ import plotly.express as px
 st.set_page_config(page_title="CCI - Inteligencia de Inventarios", layout="wide")
 st.title("📈 Dashboard Estratégico - CCI RODAMIENTOS")
 
-# --- LINK DE GITHUB ---
+# --- LINK DE GITHUB YA VALIDADO ---
 URL_GITHUB = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx"
 
-@st.cache_data
+@st.cache_data(ttl=600) # Se refresca cada 10 minutos automáticamente
 def cargar_datos(fuente):
     try:
         df = pd.read_excel(fuente)
@@ -21,33 +21,24 @@ def cargar_datos(fuente):
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         df['Margen'] = df["Venta total"] - df["Costo total local"]
         return df
-    except:
+    except Exception as e:
+        st.error(f"Error de conexión: {e}")
         return None
 
-# 2. SECCIÓN DE CARGA
-st.markdown("### 📂 Gestión de Datos")
-col_info, col_subida = st.columns([2, 1])
-
-with col_info:
-    st.info("Mostrando datos de: **GitHub (Base Central)**")
-
-with col_subida:
-    archivo_nuevo = st.file_uploader("Actualizar con otro Excel:", type=["xlsx"])
-
-# Lógica de carga
-df = None
-if archivo_nuevo is not None:
-    df = cargar_datos(archivo_nuevo)
-    st.success("✅ Usando archivo subido manualmente")
-else:
-    df = cargar_datos(URL_GITHUB)
+# 2. CARGA AUTOMÁTICA
+df = cargar_datos(URL_GITHUB)
 
 if df is None:
-    st.error("No se encontraron datos. Por favor sube un archivo.")
+    st.warning("⚠️ No se pudo conectar con la base de datos en la nube. Intente refrescar la página.")
     st.stop()
 
-# 3. FILTROS Y GRÁFICOS
-st.divider()
+# 3. INTERFAZ PARA EL GERENTE
+st.sidebar.success("✅ Conectado a la Base de Datos")
+if st.sidebar.button("🔄 Sincronizar Datos Ahora"):
+    st.cache_data.clear()
+    st.rerun()
+
+# Búsqueda de productos
 elementos = ["Todos"] + sorted(df["Elemento"].dropna().astype(str).unique().tolist())
 seleccion = st.selectbox("🔍 Buscar Producto/Elemento:", elementos)
 
@@ -67,12 +58,10 @@ st.divider()
 col_izq, col_der = st.columns(2)
 with col_izq:
     mensual = df_filtro.groupby('Mes')['Cantidad'].sum().reset_index()
-    fig_linea = px.line(mensual, x='Mes', y='Cantidad', markers=True, title="Tendencia Unidades")
-    st.plotly_chart(fig_linea, use_container_width=True)
+    st.plotly_chart(px.line(mensual, x='Mes', y='Cantidad', markers=True, title="Tendencia Unidades"), use_container_width=True)
 with col_der:
     top_10 = df.groupby('Elemento')['Venta total'].sum().sort_values(ascending=False).head(10).reset_index()
-    fig_barras = px.bar(top_10, x='Venta total', y='Elemento', orientation='h', title="Top 10 Ventas ($)")
-    st.plotly_chart(fig_barras, use_container_width=True)
+    st.plotly_chart(px.bar(top_10, x='Venta total', y='Elemento', orientation='h', title="Top 10 Ventas ($)"), use_container_width=True)
 
-st.subheader("📋 Detalle")
+st.subheader("📋 Detalle de Movimientos")
 st.dataframe(df_filtro, use_container_width=True)
