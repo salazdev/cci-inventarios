@@ -24,21 +24,21 @@ def cargar_datos(fuente):
     except:
         return None
 
-# 2. SECCIÓN DE CARGA (A la vista de todos)
+# 2. SECCIÓN DE CARGA
 st.markdown("### 📂 Gestión de Datos")
 col_info, col_subida = st.columns([2, 1])
 
 with col_info:
-    st.info("Actualmente mostrando datos de: **GitHub (Base de datos central)**")
+    st.info("Mostrando datos de: **GitHub (Base Central)**")
 
 with col_subida:
     archivo_nuevo = st.file_uploader("Actualizar con otro Excel:", type=["xlsx"])
 
-# Lógica de qué archivo mostrar
+# Lógica de carga
 df = None
 if archivo_nuevo is not None:
     df = cargar_datos(archivo_nuevo)
-    st.success("✅ Estás viendo el archivo que acabas de subir")
+    st.success("✅ Usando archivo subido manualmente")
 else:
     df = cargar_datos(URL_GITHUB)
 
@@ -46,7 +46,7 @@ if df is None:
     st.error("No se encontraron datos. Por favor sube un archivo.")
     st.stop()
 
-# 3. FILTROS Y GRÁFICOS (Igual que antes)
+# 3. FILTROS Y GRÁFICOS
 st.divider()
 elementos = ["Todos"] + sorted(df["Elemento"].dropna().astype(str).unique().tolist())
 seleccion = st.selectbox("🔍 Buscar Producto/Elemento:", elementos)
@@ -67,13 +67,12 @@ st.divider()
 col_izq, col_der = st.columns(2)
 with col_izq:
     mensual = df_filtro.groupby('Mes')['Cantidad'].sum().reset_index()
-    st.plotly_chart(px.line(mensual, x='Mes', y='Cantidad', markers=True, title="Tendencia"), use_container_width=True)
+    fig_linea = px.line(mensual, x='Mes', y='Cantidad', markers=True, title="Tendencia Unidades")
+    st.plotly_chart(fig_linea, use_container_width=True)
 with col_der:
     top_10 = df.groupby('Elemento')['Venta total'].sum().sort_values(ascending=False).head(10).reset_index()
-    st.plotly_chart(px.bar(top_10, x='Venta total', y='Elemento', orientation='h', title="Top 10 Ventas"), use_container_width=True)
+    fig_barras = px.bar(top_10, x='Venta total', y='Elemento', orientation='h', title="Top 10 Ventas ($)")
+    st.plotly_chart(fig_barras, use_container_width=True)
 
 st.subheader("📋 Detalle")
 st.dataframe(df_filtro, use_container_width=True)
-    st.dataframe(df_filtro, use_container_width=True)
-
-
