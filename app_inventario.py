@@ -3,19 +3,18 @@ import pandas as pd
 import plotly.express as px
 
 # 1. CONFIGURACIÓN
-st.set_page_config(page_title="CCI - Inventarios", layout="wide")
+st.set_page_config(page_title="CCI - Dashboard", layout="wide")
 st.title("📈 Dashboard Estratégico - CCI RODAMIENTOS")
 
-# URL DE TU GITHUB
 URL_GITHUB = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx"
 
-@st.cache_data(ttl=60) # Se limpia cada minuto si hay cambios
+@st.cache_data(ttl=300)
 def cargar_datos(fuente):
     try:
         df = pd.read_excel(fuente)
         df.columns = df.columns.str.strip()
-        # Limpieza básica
-        for col in ["Cantidad", "Venta total", "Costo total local"]:
+        columnas_num = ["Cantidad", "Venta total", "Costo total local"]
+        for col in columnas_num:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         df["Fecha documento"] = pd.to_datetime(df["Fecha documento"], errors='coerce')
@@ -25,26 +24,37 @@ def cargar_datos(fuente):
     except:
         return None
 
-# 2. CARGA AUTOMÁTICA (LA MÁS ESTABLE)
-df = cargar_datos(URL_GITHUB)
+# --- SECCIÓN DE CONTROL EN BARRA LATERAL ---
+st.sidebar.header("🕹️ Controles de Datos")
 
-# Menú lateral simplificado
-st.sidebar.header("Opciones")
-if st.sidebar.button("🔄 Actualizar Datos"):
+# Opción A: Botón de subir archivo (Para tu portátil)
+archivo_manual = st.sidebar.file_uploader("📂 Subir archivo manual (PC):", type=["xlsx"])
+
+# Opción B: Botón de reset
+if st.sidebar.button("🔄 Volver a datos de GitHub"):
     st.cache_data.clear()
     st.rerun()
 
+# 2. LÓGICA DE DECISIÓN
+if archivo_manual is not None:
+    # Si subes algo, manda lo manual
+    df = cargar_datos(archivo_manual)
+    st.sidebar.success("Usando: Archivo Manual")
+else:
+    # Si no hay nada manual, manda GitHub
+    df = cargar_datos(URL_GITHUB)
+    st.sidebar.info("Usando: Base de Datos GitHub")
+
 if df is None:
-    st.error("No se pudo conectar con GitHub. Verifica tu conexión a internet.")
+    st.error("Error al cargar los datos. Asegúrate de que el Excel sea correcto.")
     st.stop()
 
-# 3. DASHBOARD
+# 3. DASHBOARD (Gráficos y Filtros)
 elementos = ["Todos"] + sorted(df["Elemento"].dropna().unique().tolist())
 seleccion = st.selectbox("🔍 Buscar Producto:", elementos)
-
 df_filtro = df if seleccion == "Todos" else df[df["Elemento"] == seleccion]
 
-# KPIs
+# Métricas
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Movimientos", f"{len(df_filtro):,}")
 c2.metric("Cant. Total", f"{int(df_filtro['Cantidad'].sum()):,}")
