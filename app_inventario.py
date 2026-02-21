@@ -29,18 +29,27 @@ def cargar_datos(fuente):
     return df
 
 # 2. CARGA DE DATOS
+df = None
+
+# Intentamos cargar desde GitHub primero para tener datos por defecto
 try:
-    with st.spinner('Conectando con la base de datos de CCI...'):
-        df = cargar_datos(URL_GITHUB)
-    st.sidebar.success("✅ Conectado a GitHub")
-except Exception as e:
-    st.sidebar.error(f"Error en la nube: {e}")
-    archivo = st.sidebar.file_uploader("📂 Sube el archivo manualmente:", type=["xlsx"])
-    if archivo:
-        df = cargar_datos(archivo)
-    else:
-        st.info("Esperando datos para mostrar el Dashboard...")
-        st.stop()
+    df = cargar_datos(URL_GITHUB)
+except:
+    pass
+
+# AGREGAMOS ESTO: Un cargador manual que siempre esté visible en la barra lateral
+st.sidebar.header("Configuración de Datos")
+archivo_nuevo = st.sidebar.file_uploader("📂 Subir nuevo Excel (Opcional):", type=["xlsx"])
+
+# Si el usuario sube un archivo, reemplazamos los datos de GitHub
+if archivo_nuevo is not None:
+    df = cargar_datos(archivo_nuevo)
+    st.sidebar.success("✅ Usando archivo subido manualmente")
+
+# Si no hay archivo en GitHub ni manual, detenemos la app
+if df is None:
+    st.info("Por favor, suba un archivo Excel para comenzar.")
+    st.stop()
 
 # 3. INTERFAZ Y GRÁFICOS (Recuperando el diseño anterior)
 if df is not None:
@@ -84,3 +93,4 @@ if df is not None:
     # Tabla de datos al final
     st.subheader("📋 Detalle de Movimientos")
     st.dataframe(df_filtro, use_container_width=True)
+
