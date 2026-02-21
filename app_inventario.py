@@ -10,7 +10,8 @@ st.title("📈 Dashboard Estratégico - CCI RODAMIENTOS")
 # Reemplaza estos links con los "Raw" de tus archivos en GitHub
 ARCHIVOS_DISPONIBLES = {
     "Año 2025": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx",
-    "Año 2024": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202024.xlsx" # Asegúrate de que este archivo exista en tu GitHub
+    "Año 2024": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202024.xlsx",
+    "Año 2023": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202023.xlsx"# Asegúrate de que este archivo exista en tu GitHub
 }
 
 @st.cache_data(ttl=600)
@@ -71,3 +72,4 @@ if df is not None:
     st.dataframe(df_f, use_container_width=True)
 else:
     st.error("⚠️ El archivo seleccionado no se encuentra en GitHub o el enlace es incorrecto.")
+
