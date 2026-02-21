@@ -45,7 +45,7 @@ if df is not None:
     with c3:
         st.metric("Promedio Margen", f"{df['%_Margen'].mean():.1f}%")
     with c4:
-        st.metric("Máx. Días Sin Venta", f"{df['Días Sin Venta'].max()} días")
+        st.metric("Máx. Días Sin Venta", f"{df['Dias_Sin_Venta'].max()} días")
 
     st.divider()
 
@@ -59,9 +59,9 @@ if df is not None:
             st.plotly_chart(fig_pie, use_container_width=True)
 
     with col_der:
-        st.subheader("Días Sin Venta por Producto (Top 10)")
-        top_dias = df.sort_values("Días Sin Venta", ascending=False).head(10)
-        fig_bar = px.bar(top_dias, x="Días Sin Venta", y="Producto", orientation='h', color="Días Sin Venta")
+        st.subheader("Dias_Sin_Venta por Producto (Top 10)")
+        top_dias = df.sort_values("Dias_Sin_Venta", ascending=False).head(10)
+        fig_bar = px.bar(top_dias, x="Días Sin Venta", y="Producto", orientation='h', color="Dias_Sin_Venta")
         st.plotly_chart(fig_bar, use_container_width=True)
 
     # --- TABLA DETALLADA ---
@@ -71,4 +71,5 @@ if df is not None:
 else:
 
     st.error("No se pudo cargar el archivo 'Analisis_Completo.xlsx'. Verifica el link en GitHub.")
+
 
