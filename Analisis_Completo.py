@@ -16,7 +16,7 @@ def cargar_analisis(url):
         df.columns = df.columns.str.strip()
         
         # Convertir a números las columnas clave
-        cols_num = ["Venta Total", "Cantidad", "%_Margen", "Días Sin Venta"]
+        cols_num = ["Venta_Total", "Cantidad_Vendida", "%_Margen", "Dias_Sin_Venta, Estado"]
         for c in cols_num:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
@@ -69,4 +69,5 @@ if df is not None:
     st.dataframe(df, use_container_width=True)
 
 else:
+
     st.error("No se pudo cargar el archivo 'Analisis_Completo.xlsx'. Verifica el link en GitHub.")
