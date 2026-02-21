@@ -41,7 +41,7 @@ if df is not None:
     with c1:
         st.metric("Productos Analizados", len(df))
     with c2:
-        st.metric("Venta Total Sum.", f"${df['Venta Total'].sum():,.0f}")
+        st.metric("Venta_Total Sum.", f"${df['Venta_Total'].sum():,.0f}")
     with c3:
         st.metric("Promedio Margen", f"{df['%_Margen'].mean():.1f}%")
     with c4:
@@ -71,3 +71,4 @@ if df is not None:
 else:
 
     st.error("No se pudo cargar el archivo 'Analisis_Completo.xlsx'. Verifica el link en GitHub.")
+
