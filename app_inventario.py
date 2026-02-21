@@ -6,10 +6,10 @@ import plotly.express as px
 st.set_page_config(page_title="CCI - Inteligencia de Inventarios", layout="wide")
 st.title("📈 Dashboard Estratégico - CCI RODAMIENTOS")
 
-# --- LINK DE GITHUB YA VALIDADO ---
+# --- LINK DE GITHUB ---
 URL_GITHUB = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx"
 
-@st.cache_data(ttl=600) # Se refresca cada 10 minutos automáticamente
+@st.cache_data(ttl=600)
 def cargar_datos(fuente):
     try:
         df = pd.read_excel(fuente)
@@ -21,24 +21,32 @@ def cargar_datos(fuente):
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         df['Margen'] = df["Venta total"] - df["Costo total local"]
         return df
-    except Exception as e:
-        st.error(f"Error de conexión: {e}")
+    except:
         return None
 
-# 2. CARGA AUTOMÁTICA
+# 2. LÓGICA DE CARGA HÍBRIDA (Nube + Manual)
+# Primero intentamos cargar lo de la nube (GitHub)
 df = cargar_datos(URL_GITHUB)
 
+# Agregamos la opción de carga manual en la barra lateral
+st.sidebar.header("⚙️ Configuración")
+archivo_manual = st.sidebar.file_uploader("📂 Cargar otro archivo Excel:", type=["xlsx"])
+
+# Si el usuario sube algo, reemplazamos los datos de la nube
+if archivo_manual is not None:
+    df_manual = cargar_datos(archivo_manual)
+    if df_manual is not None:
+        df = df_manual
+        st.sidebar.success("✅ Usando archivo manual")
+    else:
+        st.sidebar.error("Archivo no compatible")
+
 if df is None:
-    st.warning("⚠️ No se pudo conectar con la base de datos en la nube. Intente refrescar la página.")
+    st.error("No hay datos disponibles. Por favor, verifica el archivo en GitHub o sube uno manualmente.")
     st.stop()
 
-# 3. INTERFAZ PARA EL GERENTE
-st.sidebar.success("✅ Conectado a la Base de Datos")
-if st.sidebar.button("🔄 Sincronizar Datos Ahora"):
-    st.cache_data.clear()
-    st.rerun()
-
-# Búsqueda de productos
+# 3. INTERFAZ Y GRÁFICOS
+# Buscador de productos
 elementos = ["Todos"] + sorted(df["Elemento"].dropna().astype(str).unique().tolist())
 seleccion = st.selectbox("🔍 Buscar Producto/Elemento:", elementos)
 
