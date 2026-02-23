@@ -14,6 +14,15 @@ st.divider()
 st.sidebar.title("Salaz Analytics")
 st.sidebar.markdown("---")
 
+# --- ENCABEZADO DE MARCA ESTILIZADO ---
+st.markdown("""
+    <div style="text-align: left;">
+        <h2 style="margin-bottom: 0px; color: white; letter-spacing: 2px;">SALAZ ANALYTICS</h2>
+        <p style="font-size: 14px; color: #00eb93; margin-top: 0px; text-transform: uppercase;">Plataforma Inteligente de Gestión</p>
+    </div>
+""", unsafe_allow_html=True)
+st.divider()
+
 # 2. DEFINICIÓN DE FUENTES DE DATOS (Links de GitHub)
 ARCHIVOS = {
     "📊 Movimientos 2025": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx",
@@ -116,6 +125,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
