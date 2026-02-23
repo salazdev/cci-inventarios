@@ -2,10 +2,21 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN INICIAL
-st.set_page_config(page_title="Salaz Analytics | Sistema Integral", layout="wide")
+# 1. CONFIGURACIÓN (Pestaña)
+st.set_page_config(page_title="Salaz Analytics", layout="wide")
 
-# 2. ENLACE AL ARCHIVO (Asegúrate de que el nombre en GitHub coincida)
+# 2. EL ENCABEZADO QUE QUIERES (Esto es lo que se verá en la página)
+# Usamos un contenedor para asegurar que sea lo primero en renderizarse
+header = st.container()
+with header:
+    st.markdown("""
+        <div style="text-align: center; background-color: #1E1E1E; padding: 10px; border-radius: 10px; border: 2px solid #00eb93; margin-bottom: 20px;">
+            <h1 style="margin: 0; color: white;">SALAZ ANALYTICS</h1>
+            <p style="font-size: 20px; color: #00eb93; margin: 0;">Plataforma Inteligente de Gestión</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# 3. ENLACE AL ARCHIVO (Asegúrate de que el nombre en GitHub coincida)
 URL_ANALISIS = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx"
 
 @st.cache_data(ttl=300)
@@ -91,6 +102,7 @@ if df is not None:
 else:
     st.warning("Esperando conexión con el archivo Excel en GitHub...")
     st.info("Asegúrate de que el archivo en GitHub se llame exactamente 'Analisis_Completo.xlsx'")
+
 
 
 
