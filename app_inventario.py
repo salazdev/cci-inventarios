@@ -2,8 +2,18 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN (Debe ser lo primero)
+# 1. CONFIGURACIÓN (Pestaña del navegador)
 st.set_page_config(page_title="Salaz Analytics", layout="wide")
+
+# 2. ENCABEZADO DE MARCA (SIEMPRE VISIBLE Y ARRIBA)
+# Lo ponemos aquí para que sea lo primero que Streamlit dibuje, pase lo que pase con los datos.
+st.markdown("""
+    <div style="text-align: left;">
+        <h3 style="margin-bottom: 0px; color: #00eb93; letter-spacing: 1px;">SALAZ ANALYTICS</h3>
+        <p style="font-size: 12px; color: gray; margin-top: 0px; text-transform: uppercase;">Plataforma Inteligente de Gestión</p>
+    </div>
+""", unsafe_allow_html=True)
+st.divider()
 
 # 2. DEFINICIÓN DE FUENTES DE DATOS (Links de GitHub)
 ARCHIVOS = {
@@ -107,6 +117,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
