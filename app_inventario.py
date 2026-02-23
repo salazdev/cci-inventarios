@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN INICIAL
-st.set_page_config(page_title="CCI - Sistema Integral", layout="wide")
+# 1. CONFIGURACIÓN INICIAL (Aquí cambiamos el nombre en la pestaña del navegador)
+st.set_page_config(page_title="Salaz Analytics - CCI", layout="wide")
 
 # 2. DEFINICIÓN DE FUENTES DE DATOS (Links de GitHub)
 ARCHIVOS = {
@@ -84,3 +84,27 @@ if df is not None:
 
 else:
     st.error("No se pudo cargar la información. Verifique que el archivo exista en GitHub.")
+    # --- 5. FOOTER (PIE DE PÁGINA) ---
+st.markdown("---")
+st.markdown(
+    """
+    <style>
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: white;
+        color: grey;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+    }
+    </style>
+    <div class="footer">
+        <p>© 2026 Salaz Analytics | Soluciones de Inteligencia de Negocios</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
