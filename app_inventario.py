@@ -7,7 +7,7 @@ st.set_page_config(page_title="Salaz Analytics", layout="wide")
 
 # 2. BRANDING (Fuera de cualquier contenedor o condición)
 st.write("# SALAZ ANALYTICS")
-st.write("### Plataforma Inteligente de Gestión")
+st.write("### Soluciones de Inteligencia de Negocios")
 st.divider()
 
 # 3. BARRA LATERAL
@@ -116,5 +116,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
