@@ -2,8 +2,17 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN INICIAL (Aquí cambiamos el nombre en la pestaña del navegador)
-st.set_page_config(page_title="Salaz Analytics - CCI", layout="wide")
+# 1. CONFIGURACIÓN
+st.set_page_config(page_title="Salaz Analytics", layout="wide")
+
+# 2. BRANDING (Fuera de cualquier contenedor o condición)
+st.write("# SALAZ ANALYTICS")
+st.write("### Plataforma Inteligente de Gestión")
+st.divider()
+
+# 3. BARRA LATERAL
+st.sidebar.title("Salaz Analytics")
+st.sidebar.markdown("---")
 
 # 2. DEFINICIÓN DE FUENTES DE DATOS (Links de GitHub)
 ARCHIVOS = {
@@ -107,4 +116,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
