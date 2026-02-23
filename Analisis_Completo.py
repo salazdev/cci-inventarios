@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="CCI - Análisis Completo", layout="wide")
-st.title("📊 Análisis de Inventario y Ventas - CCI")
+# 1. CONFIGURACIÓN INICIAL
+st.set_page_config(page_title="Salaz Analytics | CCI", layout="wide")
 
 # 2. ENLACE AL ARCHIVO (Asegúrate de que el nombre en GitHub coincida)
 URL_ANALISIS = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx"
@@ -92,5 +91,6 @@ if df is not None:
 else:
     st.warning("Esperando conexión con el archivo Excel en GitHub...")
     st.info("Asegúrate de que el archivo en GitHub se llame exactamente 'Analisis_Completo.xlsx'")
+
 
 
