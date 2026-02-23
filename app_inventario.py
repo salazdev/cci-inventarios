@@ -10,7 +10,7 @@ st.set_page_config(page_title="Salaz Analytics", layout="wide")
 st.markdown("""
     <div style="text-align: left;">
         <h3 style="margin-bottom: 0px; color: #00eb93; letter-spacing: 1px;">SALAZ ANALYTICS</h3>
-        <p style="font-size: 12px; color: gray; margin-top: 0px; text-transform: uppercase;">Solucion de Inteligencia de Negocios</p>
+        <p style="font-size: 12px; color: gray; margin-top: 0px; text-transform: uppercase;">Soluciones de Inteligencia de Negocios</p>
     </div>
 """, unsafe_allow_html=True)
 st.divider()
@@ -117,6 +117,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
