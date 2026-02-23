@@ -2,19 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN
-st.set_page_config(page_title="Salaz Analytics", layout="wide")
-
-# 2. BRANDING (Fuera de cualquier contenedor o condición)
-st.write("# SALAZ ANALYTICS")
-st.write("### Soluciones de Inteligencia de Negocios")
-st.divider()
-
-# 3. BARRA LATERAL
-st.sidebar.title("Salaz Analytics")
-st.sidebar.markdown("---")
-
-# --- ENCABEZADO DE MARCA ESTILIZADO ---
+# 1. --- ENCABEZADO DE MARCA ESTILIZADO ---
 st.markdown("""
     <div style="text-align: left;">
         <h2 style="margin-bottom: 0px; color: white; letter-spacing: 2px;">SALAZ ANALYTICS</h2>
@@ -125,6 +113,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
