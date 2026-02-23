@@ -2,21 +2,20 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. CONFIGURACIÓN DE PESTAÑA (Navegador)
+# 1. CONFIGURACIÓN DE PESTAÑA
 st.set_page_config(page_title="Salaz Analytics", layout="wide")
 
-# =========================================================
-# BLOQUE DE MARCA PRINCIPAL (FUERA DE CUALQUIER LÓGICA)
-# =========================================================
-# Este bloque se ejecuta PRIMERO y SIEMPRE se verá arriba
-with st.container():
+# 2. BRANDING EN LA BARRA LATERAL (Aquí no se puede ocultar)
+with st.sidebar:
     st.markdown("""
-        <div style="text-align: center;">
-            <h1 style="color: white; margin-bottom: 0px;">SALAZ ANALYTICS</h1>
-            <p style="font-size: 20px; color: #00eb93; margin-top: 0px;">Plataforma Inteligente de Gestión</p>
-            <hr style="border: 1px solid #333;">
+        <div style="background-color: #00eb93; padding: 10px; border-radius: 5px; text-align: center;">
+            <h2 style="color: black; margin: 0;">SALAZ</h2>
+            <h2 style="color: black; margin: 0;">ANALYTICS</h2>
         </div>
+        <p style="text-align: center; font-weight: bold; margin-top: 5px;">Plataforma Inteligente de Gestión</p>
+        <hr>
     """, unsafe_allow_html=True)
+    st.title("Menú Principal")
 
 # 2. ENLACE AL ARCHIVO (Asegúrate de que el nombre en GitHub coincida)
 URL_ANALISIS = "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx"
@@ -104,6 +103,7 @@ if df is not None:
 else:
     st.warning("Esperando conexión con el archivo Excel en GitHub...")
     st.info("Asegúrate de que el archivo en GitHub se llame exactamente 'Analisis_Completo.xlsx'")
+
 
 
 
