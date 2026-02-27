@@ -9,7 +9,7 @@ st.set_page_config(page_title="Salaz Analytics", layout="wide")
 # Marca Personalizada
 st.markdown("""
     <div style="text-align: left;">
-        <h3 style="margin-bottom: 0px; color: #00eb93; letter-spacing: 1px;">SALAZ ANALYTICS</h3>
+        <h3 style="margin-bottom: 0px; color: #00eb93; letter-spacing: 1px;">Salaz Analytics</h3>
         <p style="font-size: 12px; color: gray; margin-top: 0px;">PLATAFORMA INTELIGENTE DE GESTIÓN</p>
     </div>
 """, unsafe_allow_html=True)
@@ -112,5 +112,6 @@ else:
 # 5. PIE DE PÁGINA
 st.markdown("---")
 st.caption("SALAZ ANALYTICS | Gestión de Datos en Tiempo Real")
+
 
 
