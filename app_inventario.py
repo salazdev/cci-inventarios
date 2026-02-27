@@ -46,20 +46,23 @@ archivo_manual = st.sidebar.file_uploader("Subir Excel de Ventas Recientes", typ
 # 4. PROCESAMIENTO DE DATOS
 df_principal = cargar_excel(ARCHIVOS_FIJOS[opcion])
 
-# --- PROCESAMIENTO DE CARGA MANUAL (Cruce de datos) ---
+# ... (Código anterior de carga de df_principal)
+
+if df_principal is not None:
+    
+    # --- PROCESAMIENTO DE CARGA MANUAL (Asegúrate de que este bloque esté alineado) ---
     if archivo_manual:
         st.sidebar.success("✅ Archivo de ventas cargado")
         df_ventas_manual = pd.read_excel(archivo_manual)
         
-        # Opción para visualizar el archivo que se acaba de subir
+        # Opción para visualizar el archivo subido
         with st.expander("🔍 Ver contenido del archivo de ventas subido"):
             st.dataframe(df_ventas_manual, use_container_width=True)
 
-        # CRUCE AUTOMÁTICO: Si ambos archivos tienen la columna 'Referencia'
+        # CRUCE AUTOMÁTICO
         if "Referencia" in df_principal.columns and "Referencia" in df_ventas_manual.columns:
             st.subheader("⚖️ Comparativo: Pedidos Drive vs Ventas Cargadas")
             
-            # Unimos las tablas para comparar qué se pide vs qué se ha vendido
             df_comparativo = pd.merge(
                 df_principal[['Referencia', 'Pedido 4 meses', 'Existencias']], 
                 df_ventas_manual, 
@@ -68,28 +71,25 @@ df_principal = cargar_excel(ARCHIVOS_FIJOS[opcion])
             )
             
             if not df_comparativo.empty:
-                st.write("Datos cruzados encontrados (Referencias coincidentes):")
+                st.write("Datos cruzados encontrados:")
                 st.dataframe(df_comparativo, use_container_width=True)
                 
-                # Gráfico rápido de comparación
                 fig_comp = px.scatter(df_comparativo, 
                                      x="Pedido 4 meses", 
-                                     y=df_ventas_manual.columns[1], # Toma la segunda columna del archivo subido como eje Y
+                                     y=df_ventas_manual.columns[1], 
                                      hover_name="Referencia",
-                                     title="Relación: Sugerencia de Pedido vs Venta Actual")
+                                     title="Sugerencia de Pedido vs Venta Actual")
                 st.plotly_chart(fig_comp, use_container_width=True)
             else:
-                st.warning("⚠️ No se encontraron referencias iguales entre el archivo de Drive y el archivo subido.")
+                st.warning("⚠️ No se encontraron referencias coincidentes.")
 
-    # --- LÓGICA DE VISUALIZACIÓN PARA PEDIDOS SUGERIDOS (Drive) ---
+    # --- LÓGICA DE VISUALIZACIÓN PARA PEDIDOS (Drive) ---
     if "Pedidos Sugeridos" in opcion:
         st.header("📢 Gestión de Importaciones y Pedidos")
         
-        # Alerta de 4 meses
         llegada_estimada = datetime.now() + timedelta(days=120)
         st.info(f"💡 **Nota de Logística:** Los pedidos realizados hoy llegarán aproximadamente el **{llegada_estimada.strftime('%d de Junio, 2026')}**.")
         
-        # KPIs y Gráficos del archivo de Drive
         if "Pedido 4 meses" in df_principal.columns:
             c1, c2, c3 = st.columns(3)
             c1.metric("Total Referencias", len(df_principal))
@@ -107,9 +107,10 @@ df_principal = cargar_excel(ARCHIVOS_FIJOS[opcion])
     st.dataframe(df_principal, use_container_width=True)
 
 else:
-    st.error("⚠️ No se pudo conectar con el archivo. Asegúrate de que el Drive tenga el acceso de 'Cualquier persona con el enlace'.")
+    st.error("⚠️ No se pudo conectar con el archivo.")
 
 # 5. PIE DE PÁGINA
 st.markdown("---")
 st.caption("SALAZ ANALYTICS | Gestión de Datos en Tiempo Real")
+
 
