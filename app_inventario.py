@@ -46,39 +46,64 @@ archivo_manual = st.sidebar.file_uploader("Subir Excel de Ventas Recientes", typ
 # 4. PROCESAMIENTO DE DATOS
 df_principal = cargar_excel(ARCHIVOS_FIJOS[opcion])
 
-if df_principal is not None:
-    
-    # --- LÓGICA ESPECIAL PARA PEDIDOS SUGERIDOS ---
+# --- PROCESAMIENTO DE CARGA MANUAL (Cruce de datos) ---
+    if archivo_manual:
+        st.sidebar.success("✅ Archivo de ventas cargado")
+        df_ventas_manual = pd.read_excel(archivo_manual)
+        
+        # Opción para visualizar el archivo que se acaba de subir
+        with st.expander("🔍 Ver contenido del archivo de ventas subido"):
+            st.dataframe(df_ventas_manual, use_container_width=True)
+
+        # CRUCE AUTOMÁTICO: Si ambos archivos tienen la columna 'Referencia'
+        if "Referencia" in df_principal.columns and "Referencia" in df_ventas_manual.columns:
+            st.subheader("⚖️ Comparativo: Pedidos Drive vs Ventas Cargadas")
+            
+            # Unimos las tablas para comparar qué se pide vs qué se ha vendido
+            df_comparativo = pd.merge(
+                df_principal[['Referencia', 'Pedido 4 meses', 'Existencias']], 
+                df_ventas_manual, 
+                on="Referencia", 
+                how="inner"
+            )
+            
+            if not df_comparativo.empty:
+                st.write("Datos cruzados encontrados (Referencias coincidentes):")
+                st.dataframe(df_comparativo, use_container_width=True)
+                
+                # Gráfico rápido de comparación
+                fig_comp = px.scatter(df_comparativo, 
+                                     x="Pedido 4 meses", 
+                                     y=df_ventas_manual.columns[1], # Toma la segunda columna del archivo subido como eje Y
+                                     hover_name="Referencia",
+                                     title="Relación: Sugerencia de Pedido vs Venta Actual")
+                st.plotly_chart(fig_comp, use_container_width=True)
+            else:
+                st.warning("⚠️ No se encontraron referencias iguales entre el archivo de Drive y el archivo subido.")
+
+    # --- LÓGICA DE VISUALIZACIÓN PARA PEDIDOS SUGERIDOS (Drive) ---
     if "Pedidos Sugeridos" in opcion:
         st.header("📢 Gestión de Importaciones y Pedidos")
         
         # Alerta de 4 meses
         llegada_estimada = datetime.now() + timedelta(days=120)
         st.info(f"💡 **Nota de Logística:** Los pedidos realizados hoy llegarán aproximadamente el **{llegada_estimada.strftime('%d de Junio, 2026')}**.")
-
-        # Si el usuario subió un archivo manual, comparamos
-        if archivo_manual:
-            df_ventas = pd.read_excel(archivo_manual)
-            st.success("✅ Archivo de ventas cargado. Comparando con sugeridos de Drive...")
-            
-            # Aquí podrías hacer un merge/cruce si las columnas coinciden
-            # Ejemplo: df_comparativo = pd.merge(df_principal, df_ventas, on="Referencia")
         
-        # Gráficos de Alerta basados en tu Excel (Imagen enviada)
+        # KPIs y Gráficos del archivo de Drive
         if "Pedido 4 meses" in df_principal.columns:
             c1, c2, c3 = st.columns(3)
             c1.metric("Total Referencias", len(df_principal))
             c2.metric("Unidades a Pedir", f"{int(df_principal['Pedido 4 meses'].sum()):,}")
+            c3.metric("Estatus", "Sincronizado con Drive")
             
-            # Gráfico de Barras: Top Pedidos
             st.subheader("🔥 Top 10 Pedidos Urgentes")
             fig = px.bar(df_principal.nlargest(10, 'Pedido 4 meses'), 
                          x='Pedido 4 meses', y='Referencia', orientation='h',
                          color='Pedido 4 meses', color_continuous_scale='Reds')
             st.plotly_chart(fig, use_container_width=True)
 
-    # --- TABLA DE DATOS ---
-    st.subheader(f"📋 Datos actuales: {opcion}")
+    # --- TABLA DE DATOS PRINCIPAL ---
+    st.subheader(f"📋 Datos actuales del Tablero: {opcion}")
     st.dataframe(df_principal, use_container_width=True)
 
 else:
@@ -87,3 +112,4 @@ else:
 # 5. PIE DE PÁGINA
 st.markdown("---")
 st.caption("SALAZ ANALYTICS | Gestión de Datos en Tiempo Real")
+
