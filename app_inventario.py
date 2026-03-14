@@ -30,7 +30,8 @@ URL_DRIVE_DIRECTO = f"https://docs.google.com/spreadsheets/d/{ID_DRIVE}/export?f
 ARCHIVOS_FIJOS = {
     "📦 Pedidos Sugeridos (Google Drive)": URL_DRIVE_DIRECTO,
     "📊 Movimientos 2025": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx",
-    "🚀 Análisis Avanzado": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx"
+    "🚀 Análisis Avanzado": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx",
+    "   Informe_Gerencial": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Informe_Comercial_Gerencial.xlsx"
 }
 
 @st.cache_data(ttl=300)
