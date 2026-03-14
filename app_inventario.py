@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
+import io  # Necesario para la descarga de archivos
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Salaz Analytics", layout="wide")
@@ -15,103 +16,82 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.divider()
 
-# 2. CONFIGURACIÓN DE FUENTES (Tu Link de Drive ya integrado)
+# --- FUNCIÓN DE CONVERSIÓN A EXCEL ---
+def convertir_a_excel(df):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Datos_Salaz_Analytics')
+    return output.getvalue()
+
+# 2. CONFIGURACIÓN DE FUENTES
 ID_DRIVE = "19qgKGn1RjoSE9DBEntQavxLGyl9NXb12"
 URL_DRIVE_DIRECTO = f"https://docs.google.com/spreadsheets/d/{ID_DRIVE}/export?format=xlsx"
 
 ARCHIVOS_FIJOS = {
     "📦 Pedidos Sugeridos (Google Drive)": URL_DRIVE_DIRECTO,
     "📊 Movimientos 2025": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202025.xlsx",
-    "📊 Movimientos 2024": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Movimientos%202024.xlsx",
     "🚀 Análisis Avanzado": "https://github.com/salazdev/cci-inventarios/raw/refs/heads/main/Analisis_Completo.xlsx"
 }
 
-@st.cache_data(ttl=300) # Se actualiza cada 5 minutos
+@st.cache_data(ttl=300)
 def cargar_excel(url):
     try:
         return pd.read_excel(url)
     except:
         return None
 
-# 3. BARRA LATERAL (Menú y Carga de Archivos)
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/1006/1006158.png", width=80)
-st.sidebar.title("Panel de Control")
+# 3. BARRA LATERAL (Estructura de Suite)
+st.sidebar.title("Menú Principal")
+modulo = st.sidebar.radio("Ir a:", ["🏠 Inicio", "📦 Inventarios y Ventas", "📄 Cámara de Comercio (IA)"])
 
-opcion = st.sidebar.selectbox("Ver Tablero:", list(ARCHIVOS_FIJOS.keys()))
+if modulo == "🏠 Inicio":
+    st.title("Bienvenido a SALAZ ANALYTICS")
+    st.write("Seleccione un módulo en el panel izquierdo para comenzar.")
 
-st.sidebar.divider()
-st.sidebar.subheader("📁 Carga Manual de Ventas")
-archivo_manual = st.sidebar.file_uploader("Subir Excel de Ventas Recientes", type=["xlsx"])
-
-# 4. PROCESAMIENTO DE DATOS
-df_principal = cargar_excel(ARCHIVOS_FIJOS[opcion])
-
-# ... (Código anterior de carga de df_principal)
-
-if df_principal is not None:
+elif modulo == "📦 Inventarios y Ventas":
+    st.sidebar.divider()
+    opcion = st.sidebar.selectbox("Seleccionar Base de Datos:", list(ARCHIVOS_FIJOS.keys()))
     
-    # --- PROCESAMIENTO DE CARGA MANUAL (Asegúrate de que este bloque esté alineado) ---
-    if archivo_manual:
-        st.sidebar.success("✅ Archivo de ventas cargado")
-        df_ventas_manual = pd.read_excel(archivo_manual)
-        
-        # Opción para visualizar el archivo subido
-        with st.expander("🔍 Ver contenido del archivo de ventas subido"):
-            st.dataframe(df_ventas_manual, use_container_width=True)
+    st.sidebar.subheader("📁 Carga de Ventas (CSV o XLSX)")
+    archivo_manual = st.sidebar.file_uploader("Subir archivo", type=["xlsx", "csv"])
 
-        # CRUCE AUTOMÁTICO
-        if "Referencia" in df_principal.columns and "Referencia" in df_ventas_manual.columns:
-            st.subheader("⚖️ Comparativo: Pedidos Drive vs Ventas Cargadas")
-            
-            df_comparativo = pd.merge(
-                df_principal[['Referencia', 'Pedido 4 meses', 'Existencias']], 
-                df_ventas_manual, 
-                on="Referencia", 
-                how="inner"
-            )
-            
-            if not df_comparativo.empty:
-                st.write("Datos cruzados encontrados:")
-                st.dataframe(df_comparativo, use_container_width=True)
-                
-                fig_comp = px.scatter(df_comparativo, 
-                                     x="Pedido 4 meses", 
-                                     y=df_ventas_manual.columns[1], 
-                                     hover_name="Referencia",
-                                     title="Sugerencia de Pedido vs Venta Actual")
-                st.plotly_chart(fig_comp, use_container_width=True)
+    df_principal = cargar_excel(ARCHIVOS_FIJOS[opcion])
+
+    if df_principal is not None:
+        if archivo_manual:
+            # Detectar si es CSV o XLSX
+            if archivo_manual.name.endswith('.csv'):
+                df_ventas_manual = pd.read_csv(archivo_manual)
             else:
-                st.warning("⚠️ No se encontraron referencias coincidentes.")
-
-    # --- LÓGICA DE VISUALIZACIÓN PARA PEDIDOS (Drive) ---
-    if "Pedidos Sugeridos" in opcion:
-        st.header("📢 Gestión de Importaciones y Pedidos")
-        
-        llegada_estimada = datetime.now() + timedelta(days=120)
-        st.info(f"💡 **Nota de Logística:** Los pedidos realizados hoy llegarán aproximadamente el **{llegada_estimada.strftime('%d de Junio, 2026')}**.")
-        
-        if "Pedido 4 meses" in df_principal.columns:
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Total Referencias", len(df_principal))
-            c2.metric("Unidades a Pedir", f"{int(df_principal['Pedido 4 meses'].sum()):,}")
-            c3.metric("Estatus", "Sincronizado con Drive")
+                df_ventas_manual = pd.read_excel(archivo_manual)
             
-            st.subheader("🔥 Top 10 Pedidos Urgentes")
-            fig = px.bar(df_principal.nlargest(10, 'Pedido 4 meses'), 
-                         x='Pedido 4 meses', y='Referencia', orientation='h',
-                         color='Pedido 4 meses', color_continuous_scale='Reds')
-            st.plotly_chart(fig, use_container_width=True)
+            st.sidebar.success("✅ Archivo procesado")
+            
+            # --- BOTÓN DE DESCARGA EN FORMATO XLSX ---
+            excel_data = convertir_a_excel(df_ventas_manual)
+            st.sidebar.download_button(
+                label="📥 Descargar archivo como .xlsx",
+                data=excel_data,
+                file_name=f"Ventas_Procesadas_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
-    # --- TABLA DE DATOS PRINCIPAL ---
-    st.subheader(f"📋 Datos actuales del Tablero: {opcion}")
-    st.dataframe(df_principal, use_container_width=True)
+            # Lógica de Cruce (Tu código original)
+            if "Referencia" in df_principal.columns and "Referencia" in df_ventas_manual.columns:
+                st.subheader("⚖️ Comparativo Inteligente")
+                df_comparativo = pd.merge(df_principal[['Referencia', 'Pedido 4 meses', 'Existencias']], 
+                                          df_ventas_manual, on="Referencia", how="inner")
+                st.dataframe(df_comparativo, use_container_width=True)
 
-else:
-    st.error("⚠️ No se pudo conectar con el archivo.")
+        # Visualización de Pedidos
+        st.header(f"Tablero: {opcion}")
+        st.dataframe(df_principal, use_container_width=True)
+
+elif modulo == "📄 Cámara de Comercio (IA)":
+    st.header("📄 Asistente de Cámara de Comercio")
+    st.info("Módulo en desarrollo: Aquí integraremos n8n para leer tus PDFs y generar alertas de la DIAN.")
+    pdf_subido = st.file_uploader("Suba el PDF de la Cámara de Comercio", type=["pdf"])
 
 # 5. PIE DE PÁGINA
 st.markdown("---")
-st.caption("SALAZ ANALYTICS | Gestión de Datos en Tiempo Real")
-
-
-
+st.caption("SALAZ ANALYTICS | Plataforma Inteligente de Gestión")
